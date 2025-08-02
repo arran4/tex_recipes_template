@@ -1,0 +1,52 @@
+name: Check Orphaned Files
+
+on:
+  pull_request:
+    paths:
+      - 'recipes/**.tex'
+      - 'book.tex'
+
+jobs:
+  orphaned:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Detect orphaned files
+        id: detect
+        run: |
+          set -euo pipefail
+          base="${{ github.event.pull_request.base.sha }}"
+          head="${{ github.sha }}"
+          changed=$(git diff --name-only "$base" "$head" -- 'recipes/**/*.tex')
+          echo "Changed files:\n$changed"
+          orphaned=""
+          for file in $changed; do
+            if ! grep -Fq "$file" book.tex; then
+              orphaned+="$file\n"
+            fi
+          done
+          if [ -n "$orphaned" ]; then
+            echo -e "$orphaned" > orphaned.txt
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Comment on PR
+        if: steps.detect.outputs.found == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const text = fs.readFileSync('orphaned.txt', 'utf8');
+            const body = `🚨 **Orphaned recipe files detected**\n\nThe following files were changed but are not referenced in \`book.tex\`:\n\n${text}`;
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: body
+            });
+      - name: Fail if orphaned files present
+        if: steps.detect.outputs.found == 'true'
+        run: exit 1

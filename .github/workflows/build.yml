@@ -1,0 +1,35 @@
+name: Build Book
+
+on:
+  push:
+    tags:
+      - '*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: xu-cheng/texlive-action@v2
+        with:
+          run: |
+            apk add make
+            tlmgr install chktex
+            ./scripts/check_formatting.sh
+            ./scripts/check_compile.sh
+            make
+      # Upload the built PDF directly to the release instead of storing it as
+      # a workflow artifact. The release-action will attach `book.pdf` to the
+      # tag created for this workflow run.
+      - uses: ncipollo/release-action@v1
+        with:
+          artifacts: book.pdf
+          tag: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          allowUpdates: true
+          replacesArtifacts: true
