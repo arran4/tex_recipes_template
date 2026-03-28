@@ -85,7 +85,7 @@ jobs:
         uses: xu-cheng/texlive-action@v2
         with:
           run: |
-            tlmgr install chktex
+            apk add chktex
             ./scripts/check_formatting.sh
 
   check-compile:
