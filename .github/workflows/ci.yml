@@ -86,7 +86,7 @@ jobs:
         with:
           run: |
             wget https://mirror.ctan.org/systems/texlive/tlnet/update-tlmgr-latest.sh
-            sh update-tlmgr-latest.sh --update
+            sh update-tlmgr-latest.sh -- --upgrade
             tlmgr install chktex
             ./scripts/check_formatting.sh
 
