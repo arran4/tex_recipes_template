@@ -85,7 +85,9 @@ jobs:
         uses: xu-cheng/texlive-action@v2
         with:
           run: |
-            apk add chktex
+            wget https://mirror.ctan.org/systems/texlive/tlnet/update-tlmgr-latest.sh
+            sh update-tlmgr-latest.sh --update
+            tlmgr install chktex
             ./scripts/check_formatting.sh
 
   check-compile:
