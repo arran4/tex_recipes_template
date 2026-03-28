@@ -79,16 +79,11 @@ jobs:
     needs: [route, discover]
     if: ${{ needs.route.outputs.run_code_checks == 'true' }}
     runs-on: ubuntu-latest
+    container: texlive/texlive:latest
     steps:
       - uses: actions/checkout@v4
       - name: Check Formatting
-        uses: xu-cheng/texlive-action@v2
-        with:
-          run: |
-            wget https://mirror.ctan.org/systems/texlive/tlnet/update-tlmgr-latest.sh
-            sh update-tlmgr-latest.sh -- --upgrade
-            tlmgr install chktex
-            ./scripts/check_formatting.sh
+        run: ./scripts/check_formatting.sh
 
   check-compile:
     name: Check compile
